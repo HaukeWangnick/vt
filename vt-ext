@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import argparse
+
+vtdir = os.path.dirname(sys.argv[0])
+sys.path.append(os.path.join(vtdir,'pyutils'))
+import utils
+
+ap = argparse.ArgumentParser(description='Create a new VT project directory based on an existing OVF')
+ap.add_argument('name',help='Name of the project (and of the project directory)',
+        type=utils.existingtype(False,'Project directory %s already exists'))
+ap.add_argument('ovf',help='Path of the OVF to base upon',
+        type=utils.existingtype(True,'OVF %s doesn\'t exist'))
+ap.add_argument('--local',action='store_true',
+        help='Do not prepare the project for Git')
+args = ap.parse_args()
+
+utils.projectinit(args.name,vtdir,'vt-ext.template',not args.local)
+
+# projectinit calls chdir into the new project directory
+try:
+    os.symlink(args.ovf,'basevm.ovf')
+except OSError as exc:
+    sys.exit('%s creating symlink to OVF'%exc)
