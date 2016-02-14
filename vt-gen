@@ -1,42 +1,55 @@
 #!/usr/bin/env python3
 
+'''
+:mod:`vt-gen`
+=============
+
+Generates the packer config file for a VT project.
+
+This script is part of the Virtualization Toolkit.
+'''
+
 import sys
 import os
 import argparse
 import re
 
-vtdir = os.path.dirname(sys.argv[0])
+vtdir = os.path.dirname(os.path.realpath(sys.argv[0])) # We need realpath to follow the symlinks we created for Sphinx to destination
 sys.path.append(os.path.join(vtdir,'pyutils'))
 import argutils
 import call
 
-infile = 'vm.jsonx'
-outfile = 'vm.json'
+def main():
+    infile = 'vm.jsonx'
+    outfile = 'vm.json'
 
-ap = argparse.ArgumentParser(description='Generates the packer config file %s from %s'%(outfile,infile))
-ap.add_argument('path',help='Path of the project directory [.]',nargs='?',default='.',
-        type=argutils.existingtype(True,join=infile))
-args = ap.parse_args()
+    ap = argparse.ArgumentParser(description='Generates the packer config file %s from %s'%(outfile,infile))
+    ap.add_argument('path',help='Path of the project directory [.]',nargs='?',default='.',
+            type=argutils.existingtype(True,join=infile))
+    args = ap.parse_args()
 
-os.chdir(args.path)
+    os.chdir(args.path)
 
-# Some parts of the following code are adapted from https://github.com/vaidik/commentjson
-regex = r'\s*(#|\/{2}).*$'
-regex_inline = r'(:?(?:\s)*([A-Za-z\d\.{}]*)|((?<=\").*\"),?)(?:\s)*(((#|(\/{2})).*)|)$'
-with open(outfile,mode='w',encoding='utf-8') as fout, open(infile,encoding='utf-8') as fin:
-    for line in fin:
-        line = line[:-1]
-        if re.search(regex,line):
-            if re.search(r'^'+regex,line):
-                line = None
-            elif re.search(regex_inline,line):
-                line = re.sub(regex_inline,r'\1',line)
-        if line is not None:
-            print(line,file=fout)
+    # Some parts of the following code are adapted from https://github.com/vaidik/commentjson
+    regex = r'\s*(#|\/{2}).*$'
+    regex_inline = r'(:?(?:\s)*([A-Za-z\d\.{}]*)|((?<=\").*\"),?)(?:\s)*(((#|(\/{2})).*)|)$'
+    with open(outfile,mode='w',encoding='utf-8') as fout, open(infile,encoding='utf-8') as fin:
+        for line in fin:
+            line = line[:-1]
+            if re.search(regex,line):
+                if re.search(r'^'+regex,line):
+                    line = None
+                elif re.search(regex_inline,line):
+                    line = re.sub(regex_inline,r'\1',line)
+            if line is not None:
+                print(line,file=fout)
 
-try:
-    out = call.call(('packer','validate',outfile),5)
-    print('Packer reports: %s'%out,end='')
-    print('You can now call \'packer build %s\''%outfile)
-except call.callError as exc:
-    sys.exit('%s created, but packer validation failed:\n%s'%exc)
+    try:
+        out = call.call(('packer','validate',outfile),5)
+        print('Packer reports: %s'%out,end='')
+        print('You can now call \'packer build %s\''%outfile)
+    except call.callError as exc:
+        sys.exit('%s created, but packer validation failed:\n%s'%exc)
+
+if __name__ == "__main__":
+    main()

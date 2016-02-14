@@ -1,6 +1,6 @@
 ''' 
-argutils.py
-===========
+:mod:`argutils`
+===============
 
 This module provides additional argument types for use with the standard `argparse` module.
 '''

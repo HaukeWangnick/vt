@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# VT documentation build configuration file, created by
+# Virtualization Toolkit documentation build configuration file, created by
 # sphinx-quickstart on Sun Feb 14 11:23:00 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -20,7 +20,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('.')) # Scripts are with hyphens and without .py and thus not importable. Importable symlinks to our scripts are in the doc directory.
 sys.path.insert(0, os.path.abspath('../pyutils'))
 
 # -- General configuration ------------------------------------------------
@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    # 'sphinxcontrib.argdoc' does not work without approach
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -52,7 +53,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'VT'
+project = 'Virtualization Toolkit'
 copyright = '2016, Hauke Wangnick'
 author = 'Hauke Wangnick'
 

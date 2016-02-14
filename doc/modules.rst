@@ -1,7 +1,7 @@
 VT Modules
 **********
 
-This section documents the Python modules that make up the Virtualisation Toolkit.
+This section documents the Python helper modules that make up the Virtualisation Toolkit.
 
 .. automodule:: argutils
    :members:

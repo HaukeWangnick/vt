@@ -1,6 +1,6 @@
 ''' 
-call.py
-=======
+:mod:`call`
+===========
 
 This module allows to call system utilities. It is based on the `subprocess` module of Python,
 and adds the capability of specifying a timeout (not available in Python 2) and of a progress
@@ -11,10 +11,23 @@ import os
 import sys
 import subprocess
 import select
+import shlex
 
-def communicate(proc,timeout=None,progress=None):
-    out = []
-    err = []
+def _communicate(proc,timeout=None,progress=None):
+    ''' Internal function used by :func:`call` to consume and collect the output 
+    of a previously launched process.
+    
+    `proc` is the process handle as returned by :func:`subprocess.Popen`.
+    `timeout` specifies how long every time to wait for proc to produce output 
+    before optionally bailing out.
+    `progress` is an optional function called whenever `proc` delivers some output.
+    
+    Returns a tuple of two strings, namely (output on `proc.stdout`, output on `proc.stderr`).
+    '''
+    out = [] # List of chunks of output produced by `proc` on proc.stdout
+    err = [] # List of chunks of output produced by `proc` on proc.stderr
+    
+    # To understand the following refer to the documentation of `select.select`.
     read_set = []
     if proc.stdout: read_set.append(proc.stdout)
     if proc.stderr: read_set.append(proc.stderr)
@@ -51,18 +64,28 @@ def communicate(proc,timeout=None,progress=None):
         if err: err = err.decode(proc.stderr.encoding).replace('\r\n','\n').replace('\r', '\n')
     return (out,err)
 
-class callError(subprocess.CalledProcessError): pass
+class CallError(subprocess.CalledProcessError):
+    ''' Exception raised by :func:`call` when the external process returns an non-zero return code. '''
+    pass
 
 def call(cmd,timeout=None,progress=None):
-     if type(cmd) is str: cmd = cmd.split()
-     proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,universal_newlines=True)
-     out,err = communicate(proc,timeout,progress)
-     if proc.returncode:
-         #print("cmd: "+str(cmd))
-         #print("returncode: "+str(proc.returncode))
-         #print("out: "+str(out))
-         #print("err: "+str(err))
-         #exc = subprocess.CalledProcessError(proc.returncode,cmd,out)
-         #exc.error = err
-         raise callError(proc.returncode,cmd,out)
-     return out
+    ''' Call a system command.
+    
+    `cmd` is a command string (that will be :func:`shlex.split`) or a sequence of arguments ready for :func:`subprocess.Popen`.
+    For `timeout` and `progress` refer to :func:`_communicate`.
+    
+    Returns the standard output of the command as a string.
+    Will raise :exc:`CallError` when the command returns a non-zero return code.
+    '''
+    if type(cmd) is str: cmd = shlex.split(cmd)
+    proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,universal_newlines=True)
+    out,err = _communicate(proc,timeout,progress)
+    if proc.returncode:
+        #print("cmd: "+str(cmd))
+        #print("returncode: "+str(proc.returncode))
+        #print("out: "+str(out))
+        #print("err: "+str(err))
+        #exc = subprocess.CalledProcessError(proc.returncode,cmd,out)
+        #exc.error = err
+        raise CallError(proc.returncode,cmd,out)
+    return out
