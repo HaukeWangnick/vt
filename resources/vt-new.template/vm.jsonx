@@ -28,10 +28,11 @@
 	    "boot_wait": "4s",
 	    "boot_command": [
                 "<esc><esc><enter><wait>",
+                #"<esc><esc><esc><enter><wait>", for Ubuntu desktop
                 "/install/vmlinuz noapic ",
                 "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
                 "debian-installer=en_US locale=en_US ",
-                "hostname=ItsServerTest6 ",
+                "hostname=ItsServerTest6 ", #in Ubuntu desktop, one more <esc>
                 "keyboard-configuration/modelcode=SKIP ",
                 "keyboard-configuration keyboard-configuration/modelcode string pc105 ",
 		"keyboard-configuration keyboard-configuration/layout select Germany ",

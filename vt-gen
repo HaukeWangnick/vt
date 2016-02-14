@@ -7,14 +7,15 @@ import re
 
 vtdir = os.path.dirname(sys.argv[0])
 sys.path.append(os.path.join(vtdir,'pyutils'))
-import utils
+import argutils
+import call
 
 infile = 'vm.jsonx'
 outfile = 'vm.json'
 
 ap = argparse.ArgumentParser(description='Generates the packer config file %s from %s'%(outfile,infile))
 ap.add_argument('path',help='Path of the project directory [.]',nargs='?',default='.',
-        type=utils.existingtype(True,join=infile))
+        type=argutils.existingtype(True,join=infile))
 args = ap.parse_args()
 
 os.chdir(args.path)
@@ -34,8 +35,8 @@ with open(outfile,mode='w',encoding='utf-8') as fout, open(infile,encoding='utf-
             print(line,file=fout)
 
 try:
-    out = utils.call(('packer','validate',outfile),5)
+    out = call.call(('packer','validate',outfile),5)
     print('Packer reports: %s'%out,end='')
     print('You can now call \'packer build %s\''%outfile)
-except callError as exc:
+except call.callError as exc:
     sys.exit('%s created, but packer validation failed:\n%s'%exc)

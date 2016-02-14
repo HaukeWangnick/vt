@@ -6,13 +6,14 @@ import argparse
 
 vtdir = os.path.dirname(sys.argv[0])
 sys.path.append(os.path.join(vtdir,'pyutils'))
-import utils
+import argutils
+import vtcommon
 
 ap = argparse.ArgumentParser(description='Create a new VT project directory')
 ap.add_argument('name',help='Name of the project (and of the project directory)',
-        type=utils.existingtype(False,'Project directory %s already exists'))
+        type=argutils.existingtype(False,'Project directory %s already exists'))
 ap.add_argument('--local',action='store_true',
         help='Do not prepare the project for Git')
 args = ap.parse_args()
 
-utils.projectinit(args.name,vtdir,'vt-new.template',not args.local)
+vtcommon.projectinit(args.name,vtdir,'vt-new.template',not args.local)

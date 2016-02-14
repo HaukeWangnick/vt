@@ -1,20 +1,16 @@
+''' 
+call.py
+=======
+
+This module allows to call system utilities. It is based on the `subprocess` module of Python,
+and adds the capability of specifying a timeout (not available in Python 2) and of a progress
+indicator.
+'''
+
 import os
 import sys
-import argparse
 import subprocess
 import select
-import shutil
-
-def existing(path,exist,fmt,join):
-    orig = path
-    if join: path = os.path.join(path,join)
-    if os.path.exists(path)!=exist:
-        if fmt is None: fmt = '%s doesn\'t exist' if exist else '%s already exists'
-        raise argparse.ArgumentTypeError(fmt%path)
-    return orig
-             
-def existingtype(exist,fmt=None,join=None):
-    return lambda path: existing(path,exist,fmt,join)
 
 def communicate(proc,timeout=None,progress=None):
     out = []
@@ -70,17 +66,3 @@ def call(cmd,timeout=None,progress=None):
          #exc.error = err
          raise callError(proc.returncode,cmd,out)
      return out
-
-def projectinit(name,vtdir,template,gitinit=True):
-    try:
-        shutil.copytree(os.path.join(vtdir,'resources',template),name,symlinks=True)
-    except OSError as exc:
-        sys.exit('%s when initialising project directory from template'%exc)
-
-    if gitinit:
-        try:
-            os.chdir(name)
-            call('git init',5)
-        except callError as exc:
-            sys.exit('Project directory created, but git init failed (%s)'%exc)
-
