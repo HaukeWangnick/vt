@@ -20,6 +20,10 @@ import argutils
 import call
 
 def main():
+    ''' Parses command line arguments and generates and validates the packer config file for VT project. 
+    
+    Call script without parameters to get usage information.'''
+
     infile = 'vm.jsonx'
     outfile = 'vm.json'
 

@@ -14,13 +14,16 @@ import call
 def projectinit(name,template,git=True):
     ''' Create a VT project directory by copying from a template resource tree.
     
-    `name` is the name of the new VT project directory.
-    `template` is the template directory to copy from.
-    `git` specifies whether to prepare the project directory for Git use.
+    Args:
+        name (str): Name of the new VT project directory.
+        template (str): Template directory to copy from.
+        git (bool): Whether to prepare the project directory for Git use.
     
-    Attention: :func:`os.chdir`\ s into the new VT project directory!
-    
-    Calls :func:`sys.exit` upon errors.
+    Yields:
+        :func:`sys.exit` upon errors.
+
+    Note: 
+        :func:`os.chdir`\ s into the new VT project directory!
     '''
     try:
         shutil.copytree(template,name,symlinks=True)

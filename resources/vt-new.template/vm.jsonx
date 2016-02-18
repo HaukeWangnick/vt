@@ -1,47 +1,99 @@
-
+#vm.jsonx - This is the basic "vt-new" template
+#Lines starting with # or // will be commented out by vt-gen, resulting in the final vm.json configuration file for packer.
+#If lines are commented in or out, it is important to keep the json grammar intact. (Trailing commas)
+#Enjoy commenting your json :)
+#
+# Date of creation: 01-Jan-2000
+# VM name: Servertemplate
+# VM description: ITIS Praktikum Server
+# Guest OS: Ubuntu 14.04 Desktop
+# Features: LDAP server, openssh server, ... 
+# VM Storage: Where the VM will be stored
+# Cfg Storage: Where the config data will be stored 
+# Comments: Room for additional information
+#
+#
+#
+#Set your packer variables here:
 {
-    "builders": [
-        {
-	    "vm_name": "ItsServerTest6",
-            "type": "virtualbox-iso",
-	   #"type": "virtualbox-ofv" 
-            "guest_os_type": "Ubuntu_64",
-            "iso_url": "./config/ubuntu-14.04.3-server-amd64.iso",
-            "iso_checksum": "9e5fecc94b3925bededed0fdca1bd417",
-            "iso_checksum_type": "md5",
-            "ssh_username": "itsadmin",
-            "ssh_password": "itsadmin",
-            "ssh_wait_timeout": "20m",
-            "disk_size": 16000,
-            "guest_additions_path": "",
-            "http_directory": "./config/",
-            "http_port_min": 8000,
-            "http_port_max": 9000,
-            "output_directory": "./artifacts/",
-            "vboxmanage": [
-	    ["modifyvm", "{{.Name}}", "--memory", "1024"],
-	    ["modifyvm", "{{.Name}}", "--cpus", "1"]
-	    ],
-            "shutdown_command": "echo 'itsadmin' | sudo -S shutdown -P now",
-            
-            "headless": false,
-	    "boot_wait": "4s",
-	    "boot_command": [
-                "<esc><esc><enter><wait>",
-                #"<esc><esc><esc><enter><wait>", for Ubuntu desktop
-                "/install/vmlinuz noapic ",
-                "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-                "debian-installer=en_US locale=en_US ",
-                "hostname=ItsServerTest6 ", #in Ubuntu desktop, one more <esc>
-                "keyboard-configuration/modelcode=SKIP ",
-                "keyboard-configuration keyboard-configuration/modelcode string pc105 ",
-		"keyboard-configuration keyboard-configuration/layout select Germany ",
-		"keyboard-configuration keyboard-configuration/variant select Germany - Eliminate dead keys ",
-		"keyboard-configuration keyboard-configuration/variantcode string nodeadkeys ",
-		"keyboard-configuration keyboard-configuration/layoutcode string de ",
-		"initrd=/install/initrd.gz -- <enter>"
-            ]
+  "variables" : {
+        "disk_size" : "20480", #disk size in MB
+        #Remember to update preseed.cfg accordingly
+        "ssh_username" : "templateuser",
+        "ssh_password" : "templateuser",
+        "host_type" : "Server",
+        "host_gui" : "GUI",
+        "hostname" : "templateserver",
+        "domain" : "itsdomain.local",
+        "ipaddress" : "10.0.0.11",
+        "netmask" : "255.255.255.0",
+        "gateway" : "10.0.0.1",
+        "host_only_nw_name" : "VirtualBox Host-Only Ethernet Adapter",
+        "ubuntu_release" : "1404"
+     },
      
-        }
-    ]
+#---builders section--- 
+#Builders create machine images for a certain hypevisor, defined in "type".
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "name" : "TemplateName", 
+      "vm_name" : "Servertemplate",  #Be sure not to have a VM with the exact name already registered in the target hypervisor
+      "guest_os_type": "Ubuntu_64",
+      #"output_directory": All artifacts are stored here after the packer build
+      "output_directory": "./artifacts/",
+      "virtualbox_version_file": ".vbox_version", 
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "2048"],
+        ["modifyvm", "{{.Name}}", "--vram", "32"],
+        ["modifyvm", "{{.Name}}", "--clipboard", "bidirectional"],
+        #["modifyvm", "{{.Name}}", "--nic2", "hostonly"],
+        #["modifyvm", "{{.Name}}", "--hostonlyadapter2", "VirtualBox Host-Only Ethernet Adapter"]
+      ],
+     "vboxmanage_post": [
+      ],
+      "iso_url": "./config/ubuntu-14.04.3-server-amd64.iso", #in /config a symlink to the ISO has to be created
+      "iso_checksum": "9e5fecc94b3925bededed0fdca1bd417",
+      "iso_checksum_type": "md5",
+      "ssh_username": "{{user `ssh_username`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_wait_timeout": "40m", 
+      "http_directory" : "./config/",
+      "boot_wait" : "10s", #!Magic number, dependent on host performance
+      "boot_command" : [
+        "<esc><esc><enter><wait5>",
+        "/install/vmlinuz noapic ",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US kbd-chooser/method=de ",
+        "hostname=itsserver ",
+        "domain=itsdomain.local ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=German ",
+        "keyboard-configuration/variant=German console-setup/ask_detect=false ",
+		"netcfg/choose_interface=eth0 ",
+        "initrd=/install/initrd.gz -- ",
+        "<enter>"
+      ],
+      
+      "disk_size" : "{{user `disk_size`}}",
+      "headless" : false,
+      "shutdown_command" : "echo {{user `ssh_password`}} | sudo -S shutdown -P now",
+      "format": "ova"
+    }
+  ],
+#---provisioners section---
+  "provisioners": [
+	{ #loading an external script
+      "scripts": ["config/templatescript.sh"], 
+      "type": "shell"
+    },
+    { #inline shell scripts
+      "type": "shell",
+      "execute_command" : "chmod +x {{ .Path }} ; {{ .Vars }} {{ .Path }}",
+      "inline": [
+      #insert shell commands as list of stings
+      ]
+    }
+  ],
 }
+#This template is based on a packer install script used to configure the itsserver, written by Prof. Dr. rer. nat. A. Claßen in 2015.

@@ -17,12 +17,14 @@ def _communicate(proc,timeout=None,progress=None):
     ''' Internal function used by :func:`call` to consume and collect the output 
     of a previously launched process.
     
-    `proc` is the process handle as returned by :func:`subprocess.Popen`.
-    `timeout` specifies how long every time to wait for proc to produce output 
-    before optionally bailing out.
-    `progress` is an optional function called whenever `proc` delivers some output.
+    Args:
+        proc (handle): Process handle as returned by :func:`subprocess.Popen`.
+        timeout (numeric): Specifies how long every time to wait for `proc` to produce output 
+            before optionally bailing out.
+        progress (func): Optional function called whenever `proc` delivers some output.
     
-    Returns a tuple of two strings, namely (output on `proc.stdout`, output on `proc.stderr`).
+    Returns:
+         (str,str): Strings containing the output on `proc.stdout` resp. `proc.stderr`.
     '''
     out = [] # List of chunks of output produced by `proc` on proc.stdout
     err = [] # List of chunks of output produced by `proc` on proc.stderr
@@ -71,11 +73,13 @@ class CallError(subprocess.CalledProcessError):
 def call(cmd,timeout=None,progress=None):
     ''' Call a system command.
     
-    `cmd` is a command string (that will be :func:`shlex.split`) or a sequence of arguments ready for :func:`subprocess.Popen`.
-    For `timeout` and `progress` refer to :func:`_communicate`.
-    
-    Returns the standard output of the command as a string.
-    Will raise :exc:`CallError` when the command returns a non-zero return code.
+    Args:
+        cmd (str|seq): Command string (that will be :func:`shlex.split`) or a sequence of arguments ready for :func:`subprocess.Popen`.
+        timeout, progress: Refer to :func:`_communicate`.
+    Returns:
+        str: Standard output of the command as a string.
+    Raises:
+        CallError: Command returns a non-zero return code.
     '''
     if type(cmd) is str: cmd = shlex.split(cmd)
     proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,universal_newlines=True)

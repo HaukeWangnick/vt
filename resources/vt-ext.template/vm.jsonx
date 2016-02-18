@@ -1,46 +1,53 @@
+#vm.jsonx - This is the basic "vt-ext" template
+#Lines starting with # or // will be commented out by vt-gen, resulting in the final vm.json configuration file for packer.
+#If lines are commented in or out, it is important to keep the json grammar intact. (Trailing commas)
+#Enjoy commenting your json :)
+#
+# Date of creation: 01-Jan-2000
+# VM name: Servertemplate
+# VM description: ITIS Praktikum Server
+# Guest OS: Ubuntu 14.04 Desktop
+# Features: LDAP server, openssh server, ... 
+# VM Storage: Where the VM will be stored
+# Cfg Storage: Where the config data will be stored 
+# Comments: Room for additional information
+#
+#
 
 {
-    "builders": [
-        {
-	    "vm_name": "ItsServerTest6",
-            "type": "virtualbox-iso",
-	   #"type": "virtualbox-ofv" 
-           "guest_os_type": "Ubuntu_64",
-            "iso_url": "./configs/ubuntu-14.04.1-server-amd64.iso",
-            "iso_checksum": "ca2531b8cd79ea5b778ede3a524779b9",
-            "iso_checksum_type": "md5",
-            "ssh_username": "itsadmin",
-            "ssh_password": "itsadmin",
-            "ssh_wait_timeout": "20m",
-            "disk_size": 16000,
-            "guest_additions_path": "",
-            "http_directory": "./configs/",
-            "http_port_min": 8000,
-            "http_port_max": 9000,
-            "output_directory": "./boxout/",
-            "vboxmanage": [
-	    ["modifyvm", "{{.Name}}", "--memory", "1024"],
-	    ["modifyvm", "{{.Name}}", "--cpus", "1"]
-	    ],
-            "shutdown_command": "echo 'itsadmin' | sudo -S shutdown -P now",
-            
-            "headless": false,
-	    "boot_wait": "4s",
-	    "boot_command": [
-                "<esc><esc><enter><wait>",
-                "/install/vmlinuz noapic ",
-                "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-                "debian-installer=en_US locale=en_US ",
-                "hostname=ItsServerTest6 ",
-                "keyboard-configuration/modelcode=SKIP ",
-                "keyboard-configuration keyboard-configuration/modelcode string pc105 ",
-		"keyboard-configuration keyboard-configuration/layout select Germany ",
-		"keyboard-configuration keyboard-configuration/variant select Germany - Eliminate dead keys ",
-		"keyboard-configuration keyboard-configuration/variantcode string nodeadkeys ",
-		"keyboard-configuration keyboard-configuration/layoutcode string de ",
-		"initrd=/install/initrd.gz -- <enter>"
-            ]
-     
-        }
-    ]
+  "variables" : {
+        "ssh_username" : "templateuser",
+        "ssh_password" : "templateuser",
+     },
+#---builders section--- 
+#Builders create machine images for a certain hypevisor, defined in "type".
+  "builders": [
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "Templat/path/to/vm.ovf", 
+      "ssh_username": "{{user `ssh_username`}}", #configured in variables
+      "ssh_password": "{{user `ssh_password`}}", #configured in variables
+      "ssh_wait_timeout": "2m", #No preseeding: Faster ssh availability.
+      "shutdown_command": "echo {{user `ssh_password`}} | sudo -S shutdown -P now", #configured in variables
+      "vboxmanage": [ #This changes the VM hardware
+        ["modifyvm", "{{.Name}}", "--memory", "2048"],
+        ["modifyvm", "{{.Name}}", "--cpus", "4"]
+      ],
+      "virtualbox_version_file": ".vbox_version"
+    }
+  ],
+#---provisioners section--- 
+  "provisioners": [
+    {
+      "scripts": ["config/templatescript.sh"],
+      "type": "shell"
+    },
+    { #inline shell scripts
+      "type": "shell",
+      "execute_command" : "chmod +x {{ .Path }} ; {{ .Vars }} {{ .Path }}",
+      "inline": [
+      #insert shell commands as list of stings
+      ]
+    }
+  ]
 }

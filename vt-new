@@ -19,6 +19,11 @@ import argutils
 import vtcommon
 
 def main():
+    ''' Parses command line arguments and creates VT project directory under the given name.
+    Optionally prepares the directory for Git use.
+    
+    Call script without parameters to get usage information.'''
+    
     ap = argparse.ArgumentParser(description='Create a new VT project directory')
     ap.add_argument('name',help='Name of the project (and of the project directory)',
             type=argutils.existingtype(False,'Project directory %s already exists'))
